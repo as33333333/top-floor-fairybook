@@ -7,7 +7,7 @@
     emotion: "情绪词",
     action: "行动词"
   };
-  const assetBase = "../public/art_assets";
+  const assetBase = window.location.protocol === "file:" ? "../public/art_assets" : "./art_assets";
   const looseChars = new Set(["的", "地", "得", "了", "着", "过", "在", "一", "个", "只", "很", "被"]);
   const propByFloor = {
     1: "prop_blue_sticker.png",
