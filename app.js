@@ -514,7 +514,7 @@
           .join("");
         return `
           <div class="choice-group">
-            <p>${categoryLabels[category]}</p>
+            <p><span>${categoryLabels[category]}</span></p>
             <div class="choice-row">${cards}</div>
           </div>
         `;
@@ -552,9 +552,11 @@
         <div class="dock-selected">
           ${words.map((word) => `<span>${escapeHtml(word)}</span>`).join("")}
         </div>
-        <label class="story-label" for="story-input">故事</label>
-        <input id="story-input" type="text" value="${escapeHtml(state.story)}" placeholder="把这 3 个词讲进故事里。" autocomplete="off" />
-        <button class="dock-submit" data-action="submit-story">讲给朋友听</button>
+        <div class="story-entry-row">
+          <label class="story-label" for="story-input">写给朋友</label>
+          <input id="story-input" type="text" value="${escapeHtml(state.story)}" placeholder="把这 3 个词讲进故事里。" autocomplete="off" />
+          <button class="dock-submit" data-action="submit-story">讲给朋友听</button>
+        </div>
         ${tip}
         ${state.error ? `<p class="error-text">${escapeHtml(state.error)}</p>` : ""}
       </section>
