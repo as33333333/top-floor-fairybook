@@ -527,7 +527,10 @@
         <header class="floor-hud">
           <span>${floor.floor}F</span>
           <strong>${floor.stage}</strong>
-          <span>${state.drafts.length}/5</span>
+          <div class="hud-right">
+            <span>${state.drafts.length}/5</span>
+            <button class="hud-reset" data-action="reset">重新开始</button>
+          </div>
         </header>
         <p class="story-whisper">${state.phase === "result" ? floor.response.line : floor.prompt}</p>
         <section class="choice-panel" aria-label="词语选择">
@@ -603,7 +606,10 @@
             <span>${page + 1} / 6</span>
             <button class="ghost-button" data-action="book-next" ${page === 5 ? "disabled" : ""}>下一页</button>
           </div>
-          <button class="primary-button" data-action="portrait">查看我的故事画像</button>
+          <div class="book-actions">
+            <button class="primary-button" data-action="portrait">查看我的故事画像</button>
+            <button class="ghost-button" data-action="reset">重新开始</button>
+          </div>
         </div>
       </section>
     `;
