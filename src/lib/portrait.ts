@@ -33,6 +33,7 @@ export function buildFallbackPortrait(drafts: FloorDraft[]): Portrait {
   return {
     portraitName: namesByTag[mainTag] || "把故事递出去的人",
     mainSymbols: words,
+    storyEvidence: `你在故事里选择了「${words.slice(0, 4).join("、")}」这样的线索。它们不是结论，而是这次创作中被你反复放到画面中央的东西。`,
     emotionalTone: hasSafety
       ? "你的故事带着安静的安全感，像是在雨声里慢慢把灯点亮。"
       : "你的故事有柔软的起伏，明亮和不确定都被放进了同一本童话书里。",
@@ -45,6 +46,11 @@ export function buildFallbackPortrait(drafts: FloorDraft[]): Portrait {
     safetyAndNeed: hasSafety
       ? "灯、门、雨伞、毛毯这类意象让故事显得很在意边界与保护，也许你很珍惜不被催促的陪伴。"
       : "这些意象让故事像一张慢慢展开的纸，里面有想被听见、也想保留一点安静角落的需要。",
+    innerPortrait: hasRepair
+      ? "从故事望向内心，你似乎更相信关系和情绪可以一点点修复。你在意的可能不是完美结局，而是困难出现以后，彼此是否还愿意留下来继续说。"
+      : hasConnection
+        ? "从故事望向内心，你似乎对人与人之间细微的许可很敏感。连接对你而言也许不是热闹，而是一种稳定、尊重边界的在场。"
+        : "从故事望向内心，你似乎习惯借由想象与行动整理感受，再从角色的选择里慢慢看见自己。",
     fairyTaleSummary: hasRepair
       ? "这不像一个关于胜利的故事，更像一个关于修好、靠近和继续讲下去的故事。"
       : "这次童话留下的痕迹，是一个小孩把看见的东西认真收好，再轻轻交给朋友。",
@@ -54,7 +60,7 @@ export function buildFallbackPortrait(drafts: FloorDraft[]): Portrait {
 
 export function portraitPrompt(gameData: FloorDraft[]) {
   return `你是一个擅长叙事心理分析和儿童绘本解读的 AI。
-请基于玩家在游戏中选择的词语和写下的故事，生成一份“故事心理画像”。
+请基于玩家在游戏中选择的词语和写下的故事，生成一份“故事心理画像”。分析路径必须是“文本证据 → 叙事模式 → 柔性的内在需要推测”，不能跳过故事证据直接判断玩家。
 
 重要限制：
 1. 不做心理诊断。
@@ -64,9 +70,11 @@ export function portraitPrompt(gameData: FloorDraft[]) {
 5. 画像要尽量真实、温柔、细腻。
 6. 请基于玩家实际文本，不要编造不存在的内容。
 7. 可以使用“似乎”“也许”“你的故事里呈现出”等柔性表达。
+8. 每个分析段落都应引用或点明玩家实际使用过的词、角色、行动或结局走向。
+9. 可以讨论安全感、边界、连接、行动感、回避、修复与被看见的需要，但不得把这些维度写成人格结论。
 
 请输出 JSON，字段为：
-portraitName, mainSymbols, emotionalTone, relationshipPattern, agencyPattern, safetyAndNeed, fairyTaleSummary, finalMessage
+portraitName, mainSymbols, storyEvidence, emotionalTone, relationshipPattern, agencyPattern, safetyAndNeed, innerPortrait, fairyTaleSummary, finalMessage
 
 玩家数据：
 ${JSON.stringify(gameData, null, 2)}`;

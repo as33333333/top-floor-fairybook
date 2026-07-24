@@ -1,8 +1,9 @@
 (function () {
   const app = document.querySelector("#app");
   const storageKey = "top-floor-fairybook-static-session";
-  const categories = ["symbol", "emotion", "action"];
+  const categories = ["subject", "symbol", "emotion", "action"];
   const categoryLabels = {
+    subject: "主体词",
     symbol: "意象词",
     emotion: "情绪词",
     action: "行动词"
@@ -13,19 +14,20 @@
     window.location.protocol === "file:" || isLocalStaticPreview ? "../public/art_assets" : "./art_assets";
   const looseChars = new Set(["的", "地", "得", "了", "着", "过", "在", "一", "个", "只", "很", "被"]);
   const propByFloor = {
-    1: "prop_blue_sticker.png",
-    2: "prop_little_lamp.png",
-    3: "prop_paper_boat.png",
-    4: "prop_glowing_plant.png",
-    5: "prop_star_sticker.png"
+    1: "prop_blue_sticker.webp",
+    2: "prop_little_lamp.webp",
+    3: "prop_paper_boat.webp",
+    4: "prop_glowing_plant.webp",
+    5: "prop_star_sticker.webp"
   };
+  const preloadedImages = new Set();
 
   const floors = [
     {
       floor: 1,
       stage: "开始",
       title: "故事开始了",
-      prompt: "朋友把几张词卡放在第一层的门口。请选择 3 个词，作为故事的开头。",
+      prompt: "朋友把几张词卡放在第一层的门口。请选择 4 个词，作为故事的开头。",
       helper: "故事里可以出现一个小角色，ta 准备去某个地方，或者发现了一件奇怪的小事。",
       cue: "贴纸",
       response: {
@@ -84,6 +86,12 @@
   ];
 
   const wordCards = [
+    card("f1-deer", "小鹿", "subject", 1, { vulnerability: 1, adventure: 1 }),
+    card("f1-ant", "蚂蚁", "subject", 1, { agency: 2, patience: 1 }),
+    card("f1-fox", "小狐狸", "subject", 1, { imagination: 1, caution: 1 }),
+    card("f1-dandelion", "蒲公英", "subject", 1, { freedom: 2, hope: 1 }),
+    card("f1-sparrow", "麻雀", "subject", 1, { freedom: 1, connection_need: 1 }),
+    card("f1-snail", "小蜗牛", "subject", 1, { patience: 2, safety: 1 }),
     card("f1-blue-door", "蓝色门", "symbol", 1, { boundary: 2, safety: 1 }),
     card("f1-kite", "风筝", "symbol", 1, { freedom: 2, adventure: 1 }),
     card("f1-marble", "玻璃珠", "symbol", 1, { imagination: 2, being_seen: 1 }),
@@ -103,6 +111,12 @@
     card("f1-run", "跑起来", "action", 1, { freedom: 2, agency: 2 }),
     card("f1-stop", "停下来", "action", 1, { patience: 2, boundary: 1 }),
 
+    card("f2-black-cat", "黑猫", "subject", 2, { boundary: 1, imagination: 1 }),
+    card("f2-firefly", "萤火虫", "subject", 2, { hope: 2, connection_need: 1 }),
+    card("f2-rabbit", "小兔子", "subject", 2, { vulnerability: 1, caution: 1 }),
+    card("f2-moss", "苔藓", "subject", 2, { patience: 2, safety: 1 }),
+    card("f2-oak", "橡树", "subject", 2, { safety: 2, home: 1 }),
+    card("f2-goldfish", "金鱼", "subject", 2, { imagination: 1, freedom: 1 }),
     card("f2-lamp", "小灯", "symbol", 2, { safety: 2, hope: 2 }),
     card("f2-blocks", "积木", "symbol", 2, { repair: 1, imagination: 2 }),
     card("f2-cat", "会说话的猫", "symbol", 2, { imagination: 2, connection_need: 1 }),
@@ -122,6 +136,12 @@
     card("f2-near", "靠近", "action", 2, { connection_need: 2, trust: 1 }),
     card("f2-sit", "坐下", "action", 2, { patience: 1, safety: 1 }),
 
+    card("f3-swallow", "雨燕", "subject", 3, { freedom: 1, vulnerability: 1 }),
+    card("f3-hedgehog", "刺猬", "subject", 3, { boundary: 2, protection: 1 }),
+    card("f3-mushroom", "蘑菇", "subject", 3, { imagination: 1, safety: 1 }),
+    card("f3-bear", "小熊", "subject", 3, { protection: 1, vulnerability: 1 }),
+    card("f3-earthworm", "蚯蚓", "subject", 3, { patience: 1, repair: 1 }),
+    card("f3-turtle", "小海龟", "subject", 3, { safety: 2, patience: 1 }),
     card("f3-umbrella", "雨伞", "symbol", 3, { safety: 2, boundary: 2, protection: 1 }),
     card("f3-paper-boat", "纸船", "symbol", 3, { hope: 1, vulnerability: 1 }),
     card("f3-dark-puddle", "黑色水洼", "symbol", 3, { sadness: 2, uncertainty: 1 }),
@@ -141,6 +161,12 @@
     card("f3-hug", "抱紧", "action", 3, { protection: 2, connection_need: 1 }),
     card("f3-call", "呼唤", "action", 3, { being_seen: 2, connection_need: 2 }),
 
+    card("f4-white-deer", "白鹿", "subject", 4, { adventure: 1, imagination: 1 }),
+    card("f4-butterfly", "蝴蝶", "subject", 4, { freedom: 2, repair: 1 }),
+    card("f4-sprout", "发芽豆子", "subject", 4, { hope: 2, repair: 1 }),
+    card("f4-tit", "山雀", "subject", 4, { freedom: 1, connection_need: 1 }),
+    card("f4-squirrel", "小松鼠", "subject", 4, { agency: 1, home: 1 }),
+    card("f4-ginkgo", "银杏树", "subject", 4, { patience: 1, hope: 1 }),
     card("f4-moonlight", "月光", "symbol", 4, { hope: 2, safety: 1 }),
     card("f4-seed", "发光种子", "symbol", 4, { hope: 2, repair: 1 }),
     card("f4-cloud-ladder", "云朵梯子", "symbol", 4, { adventure: 2, imagination: 2 }),
@@ -160,6 +186,12 @@
     card("f4-let-go", "放手", "action", 4, { freedom: 2, sadness: 1 }),
     card("f4-restart", "重新开始", "action", 4, { repair: 2, hope: 1 }),
 
+    card("f5-star-bird", "星星鸟", "subject", 5, { hope: 2, imagination: 1 }),
+    card("f5-whale", "小鲸鱼", "subject", 5, { freedom: 1, connection_need: 1 }),
+    card("f5-giraffe", "长颈鹿", "subject", 5, { adventure: 1, being_seen: 1 }),
+    card("f5-daisy", "雏菊", "subject", 5, { hope: 1, safety: 1 }),
+    card("f5-dog", "小狗", "subject", 5, { trust: 2, connection_need: 1 }),
+    card("f5-moon-fish", "月亮鱼", "subject", 5, { imagination: 2, freedom: 1 }),
     card("f5-book", "童话书", "symbol", 5, { imagination: 2, being_seen: 1 }),
     card("f5-star", "星星", "symbol", 5, { hope: 2, imagination: 1 }),
     card("f5-window", "顶楼窗户", "symbol", 5, { being_seen: 2, boundary: 1 }),
@@ -189,10 +221,12 @@
     story: "",
     drafts: [],
     bookPage: 0,
-    portrait: null
+    portrait: null,
+    illustrations: {}
   };
 
   state.phase = state.phase || "select";
+  state.illustrations = state.illustrations || {};
   if (state.screen === "response") {
     state.screen = "floor";
     state.phase = "result";
@@ -239,7 +273,7 @@
   }
 
   function validateStory(selectedWords, story) {
-    if (selectedWords.length !== 3) {
+    if (selectedWords.length !== categories.length) {
       return "每一类词卡都选一张，再讲给朋友听。";
     }
     if (!story.trim()) {
@@ -284,6 +318,35 @@
     saveState();
   }
 
+  function refreshCategory(category) {
+    const usedIds = new Set(state.drafts.flatMap((draft) => draft.selectedIds));
+    const visibleIds = new Set(
+      state.drawnCards.filter((item) => item.category === category).map((item) => item.id)
+    );
+    const pool = wordCards.filter(
+      (item) =>
+        item.floor === state.currentFloor &&
+        item.category === category &&
+        !usedIds.has(item.id) &&
+        !visibleIds.has(item.id)
+    );
+    const fallbackPool = wordCards.filter(
+      (item) => item.floor === state.currentFloor && item.category === category && !visibleIds.has(item.id)
+    );
+    const replacements = shuffle(pool.length >= 3 ? pool : fallbackPool).slice(0, 3);
+    if (replacements.length < 3) return;
+
+    state.drawnCards = [
+      ...state.drawnCards.filter((item) => item.category !== category),
+      ...replacements
+    ];
+    delete state.selectedIds[category];
+    state.phase = selectedWords().length === categories.length ? "write" : "select";
+    state.error = "";
+    saveState();
+    render();
+  }
+
   function selectedWords() {
     return categories
       .map((category) => state.drawnCards.find((cardItem) => cardItem.id === state.selectedIds[category]))
@@ -297,15 +360,42 @@
 
   function setScreen(screen) {
     state.screen = screen;
-    if (screen === "floor" && state.drawnCards.length === 0) {
+    if (
+      screen === "floor" &&
+      (state.drawnCards.length === 0 ||
+        (state.phase !== "result" && !state.drawnCards.some((item) => item.category === "subject")))
+    ) {
       drawCardsForFloor(state.currentFloor);
+    }
+    if (screen === "book") {
+      preloadImage(`${assetBase}/05_book/book_cover.webp`);
+      preloadImage(`${assetBase}/05_book/book_page_template.webp`);
     }
     saveState();
     render();
   }
 
   function saveState() {
-    localStorage.setItem(storageKey, JSON.stringify(state));
+    const storageState = {
+      ...state,
+      illustrations: Object.fromEntries(
+        Object.entries(state.illustrations || {}).map(([floor, illustration]) => [
+          floor,
+          {
+            ...illustration,
+            image:
+              typeof illustration.image === "string" && illustration.image.startsWith("data:")
+                ? null
+                : illustration.image
+          }
+        ])
+      )
+    };
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(storageState));
+    } catch {
+      // The story remains playable even if the browser has exhausted its local quota.
+    }
   }
 
   function loadState() {
@@ -330,6 +420,7 @@
       drafts: [],
       bookPage: 0,
       portrait: null,
+      illustrations: {},
       error: ""
     });
     render();
@@ -344,20 +435,22 @@
       return;
     }
 
+    const draft = {
+      floor: state.currentFloor,
+      selectedWords: words,
+      selectedIds: categories.map((category) => state.selectedIds[category]),
+      userStory: state.story.trim(),
+      timestamp: Date.now()
+    };
     state.drafts = [
       ...state.drafts.filter((draft) => draft.floor !== state.currentFloor),
-      {
-        floor: state.currentFloor,
-        selectedWords: words,
-        selectedIds: categories.map((category) => state.selectedIds[category]),
-        userStory: state.story.trim(),
-        timestamp: Date.now()
-      }
+      draft
     ];
     state.phase = "result";
     state.error = "";
     saveState();
     render();
+    queueIllustration(draft);
   }
 
   function goNextFloor() {
@@ -395,7 +488,9 @@
     const tags = Object.entries(scores)
       .sort((a, b) => b[1] - a[1])
       .map(([tag]) => tag);
-    const words = Array.from(new Set(state.drafts.flatMap((draft) => draft.selectedWords))).slice(0, 5);
+    const words = Array.from(new Set(state.drafts.flatMap((draft) => draft.selectedWords))).slice(0, 6);
+    const storyText = state.drafts.map((draft) => draft.userStory).join(" ");
+    const evidence = words.slice(0, 4).join("、") || "故事里的角色与动作";
     const mainTag = tags[0] || "imagination";
     const names = {
       safety: "点灯的人",
@@ -423,21 +518,27 @@
     state.portrait = {
       portraitName: names[mainTag] || "把故事递出去的人",
       mainSymbols: words,
+      storyEvidence: `你在五段故事里选择了「${evidence}」这样的线索。它们不是结论，只是这次创作里反复被你放到画面中央的东西。`,
       emotionalTone: hasSafety
-        ? "你的故事带着安静的安全感，像是在雨声里慢慢把灯点亮。"
-        : "你的故事有柔软的起伏，明亮和不确定都被放进了同一本童话书里。",
+        ? "从情绪走向看，故事会先确认安全，再允许变化发生。紧张或难过没有被立刻抹去，而是被灯、门、保护与等待轻轻托住。"
+        : "故事的情绪并不只有明亮的一面，不确定、犹豫与希望并存。你允许角色带着复杂感受继续往前走。",
       relationshipPattern: hasConnection
-        ? "你笔下的靠近通常不是突然闯入，而是通过等待、倾听、分享和小小的回应慢慢发生。"
-        : "你笔下的角色更习惯先观察世界，再决定要不要把心里的话递出去。",
+        ? "关系往往通过等待、倾听、分享与小回应建立。角色很少突然闯入，更重视对方是否准备好，也在意自己的边界有没有被看见。"
+        : "角色倾向于先观察、理解环境，再决定是否靠近。这种节奏里既有谨慎，也保留了把心里话递出去的可能。",
       agencyPattern: hasAdventure
-        ? "故事里的角色愿意出发、寻找、打开新的可能，即使有一点犹豫，也还是在向前走。"
-        : "故事里的角色不急着证明勇敢，更像是在确认自己准备好了以后，再做一个小小选择。",
+        ? "面对变化时，角色会用出发、寻找或打开来恢复主动感。即使有犹豫，故事仍倾向于让行动创造新的出口。"
+        : "面对困难时，角色不急着证明勇敢，而是停下、观察、等待，等到内在有了把握，再做一个能够承受的小选择。",
       safetyAndNeed: hasSafety
-        ? "灯、门、雨伞、毛毯这类意象让故事显得很在意边界与保护，也许你很珍惜不被催促的陪伴。"
-        : "这些意象让故事像一张慢慢展开的纸，里面有想被听见、也想保留一点安静角落的需要。",
+        ? "故事把安全感放在可见、可掌控的小事物里：一盏灯、一扇门、一把伞，或一个愿意等待的存在。也许你珍惜的是不催促、能回应、又允许保留距离的陪伴。"
+        : "故事里的安全感更多来自理解情境与保留选择。也许你既希望被认真听见，也需要一个不会被立刻解释或推动的安静角落。",
+      innerPortrait: hasRepair
+        ? "从故事望向内心，你似乎更相信关系和情绪可以被一点点修复，而不是靠一次彻底的改变。你在意的可能不是完美结局，而是困难出现以后，彼此是否还愿意留下来继续说。"
+        : hasConnection
+          ? "从故事望向内心，你似乎对人与人之间细微的许可很敏感：什么时候靠近，什么时候等待，什么样的回应才算真正听见。连接对你而言也许不是热闹，而是一种稳定的在场。"
+          : "从故事望向内心，你似乎习惯借由想象与行动整理感受。比起直接给情绪下定义，你更愿意先让角色走一段路，再从它的选择里看见自己。",
       fairyTaleSummary: hasRepair
         ? "这不像一个关于胜利的故事，更像一个关于修好、靠近和继续讲下去的故事。"
-        : "这次童话留下的痕迹，是一个小孩把看见的东西认真收好，再轻轻交给朋友。",
+        : `这次童话留下的痕迹，是你把“${storyText.slice(0, 18)}${storyText.length > 18 ? "……" : ""}”这样的片段认真收好，再轻轻交给朋友。`,
       finalMessage: "你不用一下子把故事讲完。有人愿意听见你慢慢说到这里。"
     };
     state.screen = "portrait";
@@ -448,6 +549,58 @@
   function generateIllustrationPrompt(draft) {
     if (!draft) return "";
     return `儿童绘本风，蜡笔质感，纸张纹理，温柔安静，低饱和。请根据这段童话生成一张插图：${draft.userStory}。必须包含这些词语意象：${draft.selectedWords.join("、")}。不要文字，不要真实照片。`;
+  }
+
+  function preloadImage(url) {
+    if (!url || preloadedImages.has(url)) return;
+    preloadedImages.add(url);
+    const image = new Image();
+    image.decoding = "async";
+    image.src = url;
+  }
+
+  function preloadFloorAssets(floorNumber) {
+    if (floorNumber < 1 || floorNumber > 5) return;
+    preloadImage(`${assetBase}/01_backgrounds/bg_stair_${floorNumber}f.webp`);
+    preloadImage(`${assetBase}/03_props/${propByFloor[floorNumber]}`);
+  }
+
+  async function queueIllustration(draft) {
+    if (!draft || state.illustrations[draft.floor]?.status === "ready") return;
+    const prompt = generateIllustrationPrompt(draft);
+    state.illustrations[draft.floor] = { status: "generating", prompt, image: null };
+    saveState();
+
+    const configuredBase = String(window.FAIRYBOOK_API_BASE || "").replace(/\/$/, "");
+    const hasSecureEndpoint = Boolean(configuredBase) || !window.location.hostname.endsWith("github.io");
+    if (!hasSecureEndpoint) {
+      state.illustrations[draft.floor] = {
+        status: "waiting-backend",
+        prompt,
+        image: null
+      };
+      saveState();
+      return;
+    }
+
+    try {
+      const response = await fetch(`${configuredBase}/api/illustration`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ story: draft.userStory, selectedWords: draft.selectedWords })
+      });
+      if (!response.ok) throw new Error("illustration request failed");
+      const data = await response.json();
+      state.illustrations[draft.floor] = {
+        status: data.image ? "ready" : "waiting-backend",
+        prompt: data.prompt || prompt,
+        image: data.image || null
+      };
+    } catch {
+      state.illustrations[draft.floor] = { status: "waiting-backend", prompt, image: null };
+    }
+    saveState();
+    if (state.screen === "book" && state.bookPage === draft.floor) render();
   }
 
   function ambientMarkup() {
@@ -468,7 +621,7 @@
         ? `<button class="quiet-link" data-action="continue">继续上次的故事 <span aria-hidden="true">→</span></button>`
         : "";
     return `
-      <section class="scene-shell start-scene art-backed" style="background-image: url('${assetBase}/01_backgrounds/bg_start_tower.png')">
+      <section class="scene-shell start-scene art-backed" style="background-image: url('${assetBase}/01_backgrounds/bg_start_tower.webp')">
         <div class="scene-dim"></div>
         <header class="scene-masthead">
           <span>给你讲个故事</span>
@@ -492,7 +645,7 @@
 
   function renderIntro() {
     return `
-      <section class="scene-shell intro-scene art-backed" style="background-image: url('${assetBase}/01_backgrounds/bg_start_tower.png')">
+      <section class="scene-shell intro-scene art-backed" style="background-image: url('${assetBase}/01_backgrounds/bg_start_tower.webp')">
         <div class="scene-dim"></div>
         <header class="scene-masthead">
           <span>出发之前</span>
@@ -500,7 +653,7 @@
         </header>
         <article class="intro-script">
           <p>你和朋友有一个秘密游戏。</p>
-          <p>ta 在每层楼留下三个方向的词，<br />你把选中的词，讲进同一个故事里。</p>
+          <p>ta 在每层楼留下四种故事线索，<br />你把选中的词，讲进同一个故事里。</p>
           <p>不用写得很好。<br />像小时候那样讲，就可以。</p>
           <button class="scene-link" data-action="start-floor">
             <span>去第一层</span>
@@ -515,6 +668,11 @@
     const floor = currentFloor();
     const words = selectedWords();
     const missing = softMissingWords(words, state.story);
+    const previousStory = state.drafts
+      .filter((draft) => draft.floor < state.currentFloor)
+      .sort((a, b) => a.floor - b.floor)
+      .map((draft) => draft.userStory)
+      .join(" ");
     const wordGroups = categories
       .map((category) => {
         const cards = state.drawnCards
@@ -530,13 +688,14 @@
           <div class="word-line">
             <span class="word-line-label">${categoryLabels[category]}</span>
             <div class="word-line-options">${cards}</div>
+            <button class="word-refresh" data-action="refresh-category" data-category="${category}" aria-label="换一组${categoryLabels[category]}" title="换一组${categoryLabels[category]}">↻</button>
           </div>
         `;
       })
       .join("");
 
     return `
-      <section class="floor-shell art-backed" style="background-image: url('${assetBase}/01_backgrounds/bg_stair_${floor.floor}f.png')">
+      <section class="floor-shell art-backed" style="background-image: url('${assetBase}/01_backgrounds/bg_stair_${floor.floor}f.webp')">
         <div class="background-dim"></div>
         <header class="floor-hud">
           <span class="floor-number">0${floor.floor}</span>
@@ -548,10 +707,15 @@
         </header>
         ${state.phase !== "result" ? `<p class="story-whisper">${floor.prompt}</p>` : ""}
         ${
+          state.phase !== "result" && previousStory
+            ? `<p class="story-so-far"><span>前文</span>${escapeHtml(previousStory)}</p>`
+            : ""
+        }
+        ${
           state.phase !== "result"
-            ? `<section class="word-stage" aria-label="词语选择">
+            ? `<section class="word-stage ${previousStory ? "has-history" : ""}" aria-label="词语选择">
                 ${wordGroups}
-                <p class="selection-count" aria-live="polite">已选 ${words.length} / 3</p>
+                <p class="selection-count" aria-live="polite">已选 ${words.length} / ${categories.length}</p>
               </section>`
             : ""
         }
@@ -574,7 +738,7 @@
         </div>
         <div class="composer-entry">
           <label class="sr-only" for="story-input">写给朋友</label>
-          <input id="story-input" type="text" value="${escapeHtml(state.story)}" placeholder="把这 3 个词讲进故事里。" autocomplete="off" />
+          <input id="story-input" type="text" value="${escapeHtml(state.story)}" placeholder="把这 4 个词讲进故事里。" autocomplete="off" />
           <button class="composer-submit" data-action="submit-story" aria-label="讲给朋友听" title="讲给朋友听">
             <span aria-hidden="true">↑</span>
           </button>
@@ -602,24 +766,29 @@
   function renderBook() {
     const page = state.bookPage || 0;
     const draft = state.drafts[page - 1];
+    const illustration = draft ? state.illustrations[draft.floor] : null;
     const isCover = page === 0;
     const pageHtml = isCover
       ? `
         <p>这些故事被轻轻夹进纸页里，送给顶楼的朋友。</p>
       `
       : `
-        <div class="book-illustration" aria-label="故事插图" title="${escapeHtml(generateIllustrationPrompt(draft))}">
-          <span>正在为这段故事画一幅画</span>
+        <div class="book-illustration ${illustration?.image ? "has-image" : ""}" aria-label="故事插图" title="${escapeHtml(generateIllustrationPrompt(draft))}">
+          ${
+            illustration?.image
+              ? `<img src="${illustration.image}" alt="根据第 ${draft.floor} 页故事生成的插图" />`
+              : `<span>${illustration?.status === "generating" ? "正在为这段故事画一幅画" : "故事插画 · 已排队"}</span>`
+          }
         </div>
         <div class="book-copy">
           <p class="book-page-index">第 ${draft.floor} 页</p>
           <p class="book-story-text">${escapeHtml(draft.userStory)}</p>
         </div>
       `;
-    const image = isCover ? "book_cover.png" : "book_page_template.png";
+    const image = isCover ? "book_cover.webp" : "book_page_template.webp";
 
     return `
-      <section class="scene-shell book-scene art-backed" style="background-image: url('${assetBase}/01_backgrounds/bg_stair_5f.png')">
+      <section class="scene-shell book-scene art-backed" style="background-image: url('${assetBase}/01_backgrounds/bg_stair_5f.webp')">
         <div class="scene-dim"></div>
         <div class="book-layout">
           <div class="book-page art-backed" style="background-image: linear-gradient(90deg, rgba(181,138,98,0.12), transparent 36px), linear-gradient(rgba(255,253,244,0.72), rgba(255,253,244,0.72)), url('${assetBase}/05_book/${image}')">
@@ -643,16 +812,18 @@
     const portrait = state.portrait;
     const symbols = portrait.mainSymbols.map((symbol) => `<span>${escapeHtml(symbol)}</span>`).join("");
     return `
-      <section class="scene-shell analysis-scene art-backed" style="background-image: url('${assetBase}/01_backgrounds/bg_stair_5f.png')">
+      <section class="scene-shell analysis-scene art-backed" style="background-image: url('${assetBase}/01_backgrounds/bg_stair_5f.webp')">
         <div class="scene-dim"></div>
         <section class="portrait-letter">
           <p class="letter-kicker">童话书里夹着的一封信</p>
           <h3>${escapeHtml(portrait.portraitName)}</h3>
           <div class="symbol-list">${symbols}</div>
-          <p>${escapeHtml(portrait.emotionalTone)}</p>
-          <p>${escapeHtml(portrait.relationshipPattern)}</p>
-          <p>${escapeHtml(portrait.agencyPattern)}</p>
-          <p>${escapeHtml(portrait.safetyAndNeed)}</p>
+          <div class="portrait-section"><h4>故事里留下的线索</h4><p>${escapeHtml(portrait.storyEvidence || "")}</p></div>
+          <div class="portrait-section"><h4>情绪底色</h4><p>${escapeHtml(portrait.emotionalTone)}</p></div>
+          <div class="portrait-section"><h4>靠近他人的方式</h4><p>${escapeHtml(portrait.relationshipPattern)}</p></div>
+          <div class="portrait-section"><h4>面对困难的方式</h4><p>${escapeHtml(portrait.agencyPattern)}</p></div>
+          <div class="portrait-section"><h4>安全感与潜在需要</h4><p>${escapeHtml(portrait.safetyAndNeed)}</p></div>
+          <div class="portrait-section"><h4>从故事望向内心</h4><p>${escapeHtml(portrait.innerPortrait || portrait.fairyTaleSummary)}</p></div>
           <blockquote>${escapeHtml(portrait.fairyTaleSummary)}</blockquote>
           <strong>${escapeHtml(portrait.finalMessage)}</strong>
           <div class="button-row">
@@ -665,11 +836,19 @@
   }
 
   function render() {
-    if (!state.drawnCards.length && state.screen === "floor") {
+    if (
+      state.screen === "floor" &&
+      (!state.drawnCards.length ||
+        (state.phase !== "result" && !state.drawnCards.some((item) => item.category === "subject")))
+    ) {
       drawCardsForFloor(state.currentFloor);
-      return;
     }
 
+    preloadImage(`${assetBase}/01_backgrounds/bg_start_tower.webp`);
+    if (state.screen === "floor") {
+      preloadFloorAssets(state.currentFloor);
+      preloadFloorAssets(state.currentFloor + 1);
+    }
     const views = {
       start: renderStart,
       intro: renderIntro,
@@ -695,12 +874,13 @@
         if (action === "select-card") {
           state.selectedIds[node.dataset.category] = node.dataset.id;
           state.error = "";
-          if (selectedWords().length === 3) {
+          if (selectedWords().length === categories.length) {
             state.phase = "write";
           }
           saveState();
           render();
         }
+        if (action === "refresh-category") refreshCategory(node.dataset.category);
         if (action === "close-input") {
           state.phase = "select";
           state.error = "";

@@ -34,10 +34,12 @@ export type FloorDraft = {
 export type Portrait = {
   portraitName: string;
   mainSymbols: string[];
+  storyEvidence?: string;
   emotionalTone: string;
   relationshipPattern: string;
   agencyPattern: string;
   safetyAndNeed: string;
+  innerPortrait?: string;
   fairyTaleSummary: string;
   finalMessage: string;
 };
