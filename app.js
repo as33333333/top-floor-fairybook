@@ -14,11 +14,11 @@
     window.location.protocol === "file:" || isLocalStaticPreview ? "../public/art_assets" : "./art_assets";
   const looseChars = new Set(["的", "地", "得", "了", "着", "过", "在", "一", "个", "只", "很", "被"]);
   const propByFloor = {
-    1: "prop_blue_sticker.webp",
+    1: null,
     2: "prop_little_lamp.webp",
     3: "prop_paper_boat.webp",
     4: "prop_glowing_plant.webp",
-    5: "prop_star_sticker.webp"
+    5: null
   };
   const preloadedImages = new Set();
 
@@ -29,9 +29,9 @@
       title: "故事开始了",
       prompt: "朋友把几张词卡放在第一层的门口。请选择 4 个词，作为故事的开头。",
       helper: "故事里可以出现一个小角色，ta 准备去某个地方，或者发现了一件奇怪的小事。",
-      cue: "贴纸",
+      cue: "门缝",
       response: {
-        change: "门缝里飘出一张蓝色贴纸，楼梯墙上出现一行很浅的蜡笔字。",
+        change: "楼梯墙上出现一行很浅的蜡笔字。",
         line: "后来呢？"
       }
     },
@@ -43,7 +43,7 @@
       helper: "请继续上一层的故事，让故事里出现一次遇见。",
       cue: "小灯",
       response: {
-        change: "楼梯墙上的一盏小灯亮起，墙角多了一颗小星星贴纸。",
+        change: "楼梯墙上的一盏小灯亮起。",
         line: "我还想听。"
       }
     },
@@ -197,7 +197,7 @@
     card("f5-window", "顶楼窗户", "symbol", 5, { being_seen: 2, boundary: 1 }),
     card("f5-sky", "蓝绿色天空", "symbol", 5, { freedom: 1, safety: 1 }),
     card("f5-page", "空白页", "symbol", 5, { imagination: 2, possibility: 2 }),
-    card("f5-sticker", "小贴纸", "symbol", 5, { being_seen: 1, connection_need: 1 }),
+    card("f5-envelope", "小信封", "symbol", 5, { being_seen: 1, connection_need: 1 }),
     card("f5-understood", "被理解", "emotion", 5, { being_seen: 2, connection_need: 2 }),
     card("f5-relax", "放松", "emotion", 5, { safety: 2, trust: 1 }),
     card("f5-miss", "想念", "emotion", 5, { connection_need: 2, home: 1 }),
@@ -467,6 +467,51 @@
     render();
   }
 
+  function restoreFloorForEditing(floorNumber) {
+    const draft = state.drafts.find((item) => item.floor === floorNumber);
+    state.currentFloor = floorNumber;
+    state.screen = "floor";
+
+    if (!draft) {
+      drawCardsForFloor(floorNumber);
+      render();
+      return;
+    }
+
+    state.selectedIds = {};
+    state.drawnCards = categories.flatMap((category, index) => {
+      const selectedId = draft.selectedIds[index];
+      const selectedCard =
+        wordCards.find((item) => item.id === selectedId) ||
+        card(selectedId, draft.selectedWords[index], category, floorNumber, {});
+      const alternatives = shuffle(
+        wordCards.filter(
+          (item) =>
+            item.floor === floorNumber &&
+            item.category === category &&
+            item.id !== selectedCard.id
+        )
+      ).slice(0, 2);
+      state.selectedIds[category] = selectedCard.id;
+      return shuffle([selectedCard, ...alternatives]);
+    });
+    state.story = draft.userStory;
+    state.phase = "write";
+    state.error = "";
+    saveState();
+    render();
+  }
+
+  function goPreviousStep() {
+    if (state.phase === "result") {
+      restoreFloorForEditing(state.currentFloor);
+      return;
+    }
+    if (state.currentFloor > 1) {
+      restoreFloorForEditing(state.currentFloor - 1);
+    }
+  }
+
   function collectTagScores() {
     const scores = {};
     state.drafts.forEach((draft) => {
@@ -562,7 +607,9 @@
   function preloadFloorAssets(floorNumber) {
     if (floorNumber < 1 || floorNumber > 5) return;
     preloadImage(`${assetBase}/01_backgrounds/bg_stair_${floorNumber}f.webp`);
-    preloadImage(`${assetBase}/03_props/${propByFloor[floorNumber]}`);
+    if (propByFloor[floorNumber]) {
+      preloadImage(`${assetBase}/03_props/${propByFloor[floorNumber]}`);
+    }
   }
 
   async function queueIllustration(draft) {
@@ -572,10 +619,10 @@
     saveState();
 
     const configuredBase = String(window.FAIRYBOOK_API_BASE || "").replace(/\/$/, "");
-    const hasSecureEndpoint = Boolean(configuredBase) || !window.location.hostname.endsWith("github.io");
+    const hasSecureEndpoint = Boolean(configuredBase);
     if (!hasSecureEndpoint) {
       state.illustrations[draft.floor] = {
-        status: "waiting-backend",
+        status: "unavailable",
         prompt,
         image: null
       };
@@ -592,12 +639,12 @@
       if (!response.ok) throw new Error("illustration request failed");
       const data = await response.json();
       state.illustrations[draft.floor] = {
-        status: data.image ? "ready" : "waiting-backend",
+        status: data.image ? "ready" : "unavailable",
         prompt: data.prompt || prompt,
         image: data.image || null
       };
     } catch {
-      state.illustrations[draft.floor] = { status: "waiting-backend", prompt, image: null };
+      state.illustrations[draft.floor] = { status: "failed", prompt, image: null };
     }
     saveState();
     if (state.screen === "book" && state.bookPage === draft.floor) render();
@@ -702,13 +749,22 @@
           <strong>${floor.stage}</strong>
           <div class="hud-right">
             <span>${state.drafts.length} / 5</span>
+            <button class="hud-back" data-action="previous-step" ${
+              state.currentFloor === 1 && state.phase !== "result" ? "disabled" : ""
+            }>上一步</button>
             <button class="hud-reset" data-action="reset">重新开始</button>
           </div>
         </header>
-        ${state.phase !== "result" ? `<p class="story-whisper">${floor.prompt}</p>` : ""}
         ${
-          state.phase !== "result" && previousStory
-            ? `<p class="story-so-far"><span>前文</span>${escapeHtml(previousStory)}</p>`
+          state.phase !== "result"
+            ? `<div class="floor-narrative">
+                <p class="story-whisper">${floor.prompt}</p>
+                ${
+                  previousStory
+                    ? `<p class="story-so-far"><span>前文</span>${escapeHtml(previousStory)}</p>`
+                    : ""
+                }
+              </div>`
             : ""
         }
         ${
@@ -752,7 +808,11 @@
   function renderFeedbackOverlay(floor) {
     return `
       <section class="scene-response" aria-label="朋友反馈">
-        <img class="response-prop" src="${assetBase}/03_props/${propByFloor[floor.floor]}" alt="" />
+        ${
+          propByFloor[floor.floor]
+            ? `<img class="response-prop" src="${assetBase}/03_props/${propByFloor[floor.floor]}" alt="" />`
+            : ""
+        }
         <p>${floor.response.change}</p>
         <blockquote>${floor.response.line}</blockquote>
         <button class="response-link" data-action="next-floor">
@@ -777,7 +837,13 @@
           ${
             illustration?.image
               ? `<img src="${illustration.image}" alt="根据第 ${draft.floor} 页故事生成的插图" />`
-              : `<span>${illustration?.status === "generating" ? "正在为这段故事画一幅画" : "故事插画 · 已排队"}</span>`
+              : `<span>${
+                  illustration?.status === "generating"
+                    ? "正在为这段故事画一幅画"
+                    : illustration?.status === "failed"
+                      ? "插画生成失败"
+                      : "插画服务未连接"
+                }</span>`
           }
         </div>
         <div class="book-copy">
@@ -800,8 +866,8 @@
             <button class="page-arrow" data-action="book-next" aria-label="下一页" ${page === 5 ? "disabled" : ""}>→</button>
           </div>
           <div class="book-actions">
-            <button class="quiet-link" data-action="portrait">翻到最后一封信 <span aria-hidden="true">→</span></button>
             <button class="quiet-link" data-action="reset">重新开始</button>
+            <button class="quiet-link" data-action="portrait">翻到最后一封信 <span aria-hidden="true">→</span></button>
           </div>
         </div>
       </section>
@@ -889,6 +955,7 @@
         }
         if (action === "submit-story") submitStory();
         if (action === "next-floor") goNextFloor();
+        if (action === "previous-step") goPreviousStep();
         if (action === "book-prev") {
           state.bookPage = Math.max(0, state.bookPage - 1);
           saveState();
