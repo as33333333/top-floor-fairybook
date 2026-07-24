@@ -7,7 +7,10 @@
     emotion: "情绪词",
     action: "行动词"
   };
-  const assetBase = window.location.protocol === "file:" ? "../public/art_assets" : "./art_assets";
+  const isLocalStaticPreview =
+    ["localhost", "127.0.0.1"].includes(window.location.hostname) && window.location.pathname.includes("/static/");
+  const assetBase =
+    window.location.protocol === "file:" || isLocalStaticPreview ? "../public/art_assets" : "./art_assets";
   const looseChars = new Set(["的", "地", "得", "了", "着", "过", "在", "一", "个", "只", "很", "被"]);
   const propByFloor = {
     1: "prop_blue_sticker.png",
@@ -461,22 +464,27 @@
 
   function renderStart() {
     const continueButton =
-      state.drafts.length > 0 ? `<button class="ghost-button" data-action="continue">继续故事</button>` : "";
+      state.drafts.length > 0
+        ? `<button class="quiet-link" data-action="continue">继续上次的故事 <span aria-hidden="true">→</span></button>`
+        : "";
     return `
       <section class="scene-shell start-scene art-backed" style="background-image: url('${assetBase}/01_backgrounds/bg_start_tower.png')">
         <div class="scene-dim"></div>
-        <img class="start-child" src="${assetBase}/02_characters/child_back.png" alt="" />
-        <img class="start-friend" src="${assetBase}/02_characters/friend_silhouette.png" alt="" />
-        <div class="guide-visual" aria-hidden="true">
-          <span></span>
-        </div>
-        <div class="scene-title-bar">
-          <p class="eyebrow">疗愈型网页叙事游戏</p>
-          <h1>顶楼的童话书</h1>
-        </div>
-        <div class="scene-action-row">
-          <button class="primary-button" data-action="intro">游戏引导</button>
-          ${continueButton}
+        <header class="scene-masthead">
+          <span>给你讲个故事</span>
+          <span>一场写给朋友的童话</span>
+        </header>
+        <div class="start-copy">
+          <p class="start-kicker">有个朋友住在顶楼</p>
+          <h1>顶楼的<br />童话书</h1>
+          <p class="start-summary">ta 不太常说话，只在每层楼留下一些词。今天，你可以把它们慢慢讲成一个故事。</p>
+          <div class="start-actions">
+            <button class="scene-link" data-action="intro">
+              <span>开始上楼</span>
+              <b aria-hidden="true">↗</b>
+            </button>
+            ${continueButton}
+          </div>
         </div>
       </section>
     `;
@@ -484,15 +492,21 @@
 
   function renderIntro() {
     return `
-      <section class="scene-shell art-backed" style="background-image: url('${assetBase}/01_backgrounds/bg_start_tower.png')">
+      <section class="scene-shell intro-scene art-backed" style="background-image: url('${assetBase}/01_backgrounds/bg_start_tower.png')">
         <div class="scene-dim"></div>
-        <section class="guide-panel">
-          <h2>游戏引导</h2>
-          <p>朋友住在顶楼。ta 会在每一层留下几张词卡。</p>
-          <p>你从三类词里各选一个，再把它们讲进故事里。</p>
-          <p>故事讲完后，楼梯间会出现朋友的回应。</p>
-          <button class="primary-button" data-action="start-floor">开始上楼</button>
-        </section>
+        <header class="scene-masthead">
+          <span>出发之前</span>
+          <span>00 / 05</span>
+        </header>
+        <article class="intro-script">
+          <p>你和朋友有一个秘密游戏。</p>
+          <p>ta 在每层楼留下三个方向的词，<br />你把选中的词，讲进同一个故事里。</p>
+          <p>不用写得很好。<br />像小时候那样讲，就可以。</p>
+          <button class="scene-link" data-action="start-floor">
+            <span>去第一层</span>
+            <b aria-hidden="true">↓</b>
+          </button>
+        </article>
       </section>
     `;
   }
@@ -513,9 +527,9 @@
           })
           .join("");
         return `
-          <div class="choice-group">
-            <p><span>${categoryLabels[category]}</span></p>
-            <div class="choice-row">${cards}</div>
+          <div class="word-line">
+            <span class="word-line-label">${categoryLabels[category]}</span>
+            <div class="word-line-options">${cards}</div>
           </div>
         `;
       })
@@ -525,19 +539,22 @@
       <section class="floor-shell art-backed" style="background-image: url('${assetBase}/01_backgrounds/bg_stair_${floor.floor}f.png')">
         <div class="background-dim"></div>
         <header class="floor-hud">
-          <span>${floor.floor}F</span>
+          <span class="floor-number">0${floor.floor}</span>
           <strong>${floor.stage}</strong>
           <div class="hud-right">
-            <span>${state.drafts.length}/5</span>
+            <span>${state.drafts.length} / 5</span>
             <button class="hud-reset" data-action="reset">重新开始</button>
           </div>
         </header>
-        <p class="story-whisper">${state.phase === "result" ? floor.response.line : floor.prompt}</p>
-        <section class="choice-panel" aria-label="词语选择">
-          <h2>选词卡</h2>
-          <p class="choice-hint">每一类选一个词。选好后，故事书页会从下面滑出来。</p>
-          ${wordGroups}
-        </section>
+        ${state.phase !== "result" ? `<p class="story-whisper">${floor.prompt}</p>` : ""}
+        ${
+          state.phase !== "result"
+            ? `<section class="word-stage" aria-label="词语选择">
+                ${wordGroups}
+                <p class="selection-count" aria-live="polite">已选 ${words.length} / 3</p>
+              </section>`
+            : ""
+        }
         ${state.phase === "write" ? renderStoryDock(words, missing) : ""}
         ${state.phase === "result" ? renderFeedbackOverlay(floor) : ""}
       </section>
@@ -551,14 +568,16 @@
         : "";
 
     return `
-      <section class="story-input-dock" aria-label="输入故事">
-        <div class="dock-selected">
+      <section class="story-composer" aria-label="输入故事">
+        <div class="composer-selected">
           ${words.map((word) => `<span>${escapeHtml(word)}</span>`).join("")}
         </div>
-        <div class="story-entry-row">
-          <label class="story-label" for="story-input">写给朋友</label>
+        <div class="composer-entry">
+          <label class="sr-only" for="story-input">写给朋友</label>
           <input id="story-input" type="text" value="${escapeHtml(state.story)}" placeholder="把这 3 个词讲进故事里。" autocomplete="off" />
-          <button class="dock-submit" data-action="submit-story">讲给朋友听</button>
+          <button class="composer-submit" data-action="submit-story" aria-label="讲给朋友听" title="讲给朋友听">
+            <span aria-hidden="true">↑</span>
+          </button>
         </div>
         ${tip}
         ${state.error ? `<p class="error-text">${escapeHtml(state.error)}</p>` : ""}
@@ -568,11 +587,14 @@
 
   function renderFeedbackOverlay(floor) {
     return `
-      <section class="feedback-float" aria-label="朋友反馈">
-        <img class="feedback-prop" src="${assetBase}/03_props/${propByFloor[floor.floor]}" alt="" />
+      <section class="scene-response" aria-label="朋友反馈">
+        <img class="response-prop" src="${assetBase}/03_props/${propByFloor[floor.floor]}" alt="" />
         <p>${floor.response.change}</p>
-        <strong>“${floor.response.line}”</strong>
-        <button class="primary-button" data-action="next-floor">${state.currentFloor >= 5 ? "装订童话书" : "继续上楼"}</button>
+        <blockquote>${floor.response.line}</blockquote>
+        <button class="response-link" data-action="next-floor">
+          <span>${state.currentFloor >= 5 ? "装订童话书" : "继续上楼"}</span>
+          <b aria-hidden="true">→</b>
+        </button>
       </section>
     `;
   }
@@ -587,10 +609,12 @@
       `
       : `
         <div class="book-illustration" aria-label="故事插图" title="${escapeHtml(generateIllustrationPrompt(draft))}">
-          <span>AI 插图待生成</span>
+          <span>正在为这段故事画一幅画</span>
         </div>
-        <p class="book-page-index">第 ${draft.floor} 页</p>
-        <p class="book-story-text">${escapeHtml(draft.userStory)}</p>
+        <div class="book-copy">
+          <p class="book-page-index">第 ${draft.floor} 页</p>
+          <p class="book-story-text">${escapeHtml(draft.userStory)}</p>
+        </div>
       `;
     const image = isCover ? "book_cover.png" : "book_page_template.png";
 
@@ -602,13 +626,13 @@
             ${pageHtml}
           </div>
           <div class="book-controls">
-            <button class="ghost-button" data-action="book-prev" ${page === 0 ? "disabled" : ""}>上一页</button>
+            <button class="page-arrow" data-action="book-prev" aria-label="上一页" ${page === 0 ? "disabled" : ""}>←</button>
             <span>${page + 1} / 6</span>
-            <button class="ghost-button" data-action="book-next" ${page === 5 ? "disabled" : ""}>下一页</button>
+            <button class="page-arrow" data-action="book-next" aria-label="下一页" ${page === 5 ? "disabled" : ""}>→</button>
           </div>
           <div class="book-actions">
-            <button class="primary-button" data-action="portrait">查看我的故事画像</button>
-            <button class="ghost-button" data-action="reset">重新开始</button>
+            <button class="quiet-link" data-action="portrait">翻到最后一封信 <span aria-hidden="true">→</span></button>
+            <button class="quiet-link" data-action="reset">重新开始</button>
           </div>
         </div>
       </section>
@@ -621,9 +645,8 @@
     return `
       <section class="scene-shell analysis-scene art-backed" style="background-image: url('${assetBase}/01_backgrounds/bg_stair_5f.png')">
         <div class="scene-dim"></div>
-        <section class="analysis-panel">
-          <h2>分析</h2>
-          <p class="eyebrow">你的童话画像</p>
+        <section class="portrait-letter">
+          <p class="letter-kicker">童话书里夹着的一封信</p>
           <h3>${escapeHtml(portrait.portraitName)}</h3>
           <div class="symbol-list">${symbols}</div>
           <p>${escapeHtml(portrait.emotionalTone)}</p>
@@ -633,8 +656,8 @@
           <blockquote>${escapeHtml(portrait.fairyTaleSummary)}</blockquote>
           <strong>${escapeHtml(portrait.finalMessage)}</strong>
           <div class="button-row">
-            <button class="primary-button" data-action="reset">重新开始</button>
-            <button class="ghost-button" data-action="back-book">回看童话书</button>
+            <button class="quiet-link" data-action="back-book">← 回看童话书</button>
+            <button class="quiet-link" data-action="reset">重新开始</button>
           </div>
         </section>
       </section>
@@ -704,6 +727,7 @@
 
     const input = app.querySelector("#story-input");
     if (input) {
+      window.requestAnimationFrame(() => input.focus());
       input.addEventListener("input", (event) => {
         state.story = event.target.value;
         saveState();
