@@ -1,6 +1,6 @@
 # 《顶楼的童话书》美术素材结构
 
-两小时黑客松先保证「一眼有记忆点」：蓝绿色高楼、5 层楼梯状态、词卡贴纸、最终童话书。
+两小时黑客松先保证「一眼有记忆点」：蓝绿色高楼、5 层楼梯状态、词卡、最终童话书。
 
 ## 推荐文件夹
 
@@ -23,12 +23,12 @@ public/art_assets/
 | 优先级 | 文件路径 | 用途 | 建议尺寸 |
 | --- | --- | --- | --- |
 | P0 | `01_backgrounds/bg_start_tower.png` | 开始页蓝绿色高楼，顶楼亮窗 | 1920x1080 |
-| P0 | `01_backgrounds/bg_stair_1f.png` | 1F 门缝、蓝色贴纸、蜡笔字 | 1920x1080 |
-| P0 | `01_backgrounds/bg_stair_2f.png` | 2F 小灯亮起、星星贴纸 | 1920x1080 |
+| P0 | `01_backgrounds/bg_stair_1f.png` | 1F 门缝、蜡笔字 | 1920x1080 |
+| P0 | `01_backgrounds/bg_stair_2f.png` | 2F 小灯亮起 | 1920x1080 |
 | P0 | `01_backgrounds/bg_stair_3f.png` | 3F 小雨、纸船、低落但不压抑 | 1920x1080 |
 | P0 | `01_backgrounds/bg_stair_4f.png` | 4F 纸飞机、发光植物、转折感 | 1920x1080 |
 | P0 | `01_backgrounds/bg_stair_5f.png` | 5F 顶楼门、亮窗、朋友伸手 | 1920x1080 |
-| P0 | `03_props/prop_word_card_set.png` | 词卡通用底图或九宫格贴纸 | 2048x2048 |
+| P0 | `03_props/prop_word_card_set.png` | 词卡通用底图 | 2048x2048 |
 | P0 | `05_book/book_cover.png` | 最终童话书封面 | 1600x1200 |
 | P0 | `05_book/book_page_template.png` | 最终故事页模板 | 1600x1200 |
 
@@ -38,12 +38,10 @@ public/art_assets/
 | --- | --- | --- | --- |
 | P1 | `02_characters/child_back.png` | 主角背影：背剑、抱空白书 | 1024x1024 |
 | P1 | `02_characters/friend_silhouette.png` | 顶楼朋友剪影/门后半身 | 1024x1024 |
-| P1 | `03_props/prop_blue_sticker.png` | 1F 回应贴纸 | 512x512 |
 | P1 | `03_props/prop_little_lamp.png` | 2F 小灯 | 512x512 |
 | P1 | `03_props/prop_paper_boat.png` | 3F 纸船 | 512x512 |
 | P1 | `03_props/prop_paper_plane.png` | 4F 纸飞机 | 512x512 |
 | P1 | `03_props/prop_glowing_plant.png` | 4F 发光植物 | 512x512 |
-| P1 | `03_props/prop_star_sticker.png` | 星星贴纸 | 512x512 |
 | P1 | `04_ui/ui_button_label.png` | 蜡笔标签按钮纹理 | 768x256 |
 | P1 | `06_share/share_card_template.png` | 画像分享卡模板 | 1080x1350 |
 

@@ -324,11 +324,6 @@ small {
   font-weight: 900;
 }
 
-.cue-1::after {
-  content: "贴纸";
-  font-size: 18px;
-}
-
 .cue-2::after {
   content: "灯";
 }

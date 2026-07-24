@@ -8,7 +8,7 @@ export const floors: FloorConfig[] = [
     prompt: "朋友把几张词卡放在第一层的门口。请选择 3 个词，作为故事的开头。",
     helper: "故事里可以出现一个小角色，ta 准备去某个地方，或者发现了一件奇怪的小事。",
     response: {
-      change: "门缝里飘出一张蓝色贴纸，楼梯墙上出现一行很浅的蜡笔字。",
+      change: "楼梯墙上出现一行很浅的蜡笔字。",
       line: "后来呢？"
     }
   },
@@ -19,7 +19,7 @@ export const floors: FloorConfig[] = [
     prompt: "朋友轻轻敲了敲墙。好像想知道，后来遇见了什么？",
     helper: "请继续上一层的故事，让故事里出现一次遇见。",
     response: {
-      change: "楼梯墙上的一盏小灯亮起，墙角多了一颗小星星贴纸。",
+      change: "楼梯墙上的一盏小灯亮起。",
       line: "我还想听。"
     }
   },

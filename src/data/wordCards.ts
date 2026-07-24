@@ -84,7 +84,7 @@ export const wordCards: WordCard[] = [
   { id: "f5-window", word: "顶楼窗户", category: "symbol", floor: 5, tags: t({ being_seen: 2, boundary: 1, hope: 1 }) },
   { id: "f5-sky", word: "蓝绿色天空", category: "symbol", floor: 5, tags: t({ freedom: 1, safety: 1, hope: 1 }) },
   { id: "f5-page", word: "空白页", category: "symbol", floor: 5, tags: t({ imagination: 2, possibility: 2 }) },
-  { id: "f5-sticker", word: "小贴纸", category: "symbol", floor: 5, tags: t({ being_seen: 1, memory: 1, connection_need: 1 }) },
+  { id: "f5-envelope", word: "小信封", category: "symbol", floor: 5, tags: t({ being_seen: 1, memory: 1, connection_need: 1 }) },
   { id: "f5-understood", word: "被理解", category: "emotion", floor: 5, tone: "bright", tags: t({ being_seen: 2, connection_need: 2, trust: 1 }) },
   { id: "f5-relax", word: "放松", category: "emotion", floor: 5, tone: "bright", tags: t({ safety: 2, trust: 1 }) },
   { id: "f5-miss", word: "想念", category: "emotion", floor: 5, tone: "complex", tags: t({ connection_need: 2, home: 1 }) },
