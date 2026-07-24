@@ -2073,6 +2073,7 @@ body {
   position: static;
   width: 100%;
   transform: none;
+  animation: none;
 }
 
 .story-so-far {
