@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "顶楼的童话书",
+  title: "给我讲个故事",
   description: "一场温柔的网页叙事写作游戏"
 };
 

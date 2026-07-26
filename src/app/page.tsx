@@ -170,7 +170,7 @@ export default function Home() {
           style={{ backgroundImage: startBackground }}
         >
           <p className="eyebrow">疗愈型网页叙事游戏</p>
-          <h1>顶楼的童话书</h1>
+          <h1>给我讲个故事</h1>
           <p className="hero-copy">
             有个朋友住在顶楼。ta 不太常说话，但总会留下几张词卡作为线索。
             今天，你要一层一层走上去，把故事讲给 ta 听。

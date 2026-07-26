@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
 function buildIllustrationPrompt(story: string, selectedWords: string[]) {
   return [
     "儿童绘本风，蜡笔质感，纸张纹理，温柔安静，低饱和。",
-    "为网页叙事游戏《顶楼的童话书》生成一张童话书内页插图。",
+    "为网页叙事游戏《给我讲个故事》生成一张童话书内页插图。",
     `故事：${story}`,
     `需要包含或呼应的词语：${selectedWords.join("、")}`,
     "不要文字，不要真实照片，不要恐怖，不要明显性别化角色。"
