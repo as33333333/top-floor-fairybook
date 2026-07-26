@@ -746,7 +746,6 @@
         <div class="background-dim"></div>
         <header class="floor-hud">
           <span class="floor-number">0${floor.floor}</span>
-          <strong>${floor.stage}</strong>
           <div class="hud-right">
             <span>${state.drafts.length} / 5</span>
             <button class="hud-back" data-action="previous-step" ${

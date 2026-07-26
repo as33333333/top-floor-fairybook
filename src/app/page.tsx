@@ -219,7 +219,6 @@ export default function Home() {
 
           <section className="writing-panel" aria-label="楼层写作">
             <div className="stage-line">
-              <span>{floor.stage}</span>
               <span>{drafts.length}/5 页</span>
             </div>
             <div className="card-groups">
