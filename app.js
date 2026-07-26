@@ -671,12 +671,12 @@
       <section class="scene-shell start-scene art-backed" style="background-image: url('${assetBase}/01_backgrounds/bg_start_tower.webp')">
         <div class="scene-dim"></div>
         <header class="scene-masthead">
-          <span>给你讲个故事</span>
+          <span>给我讲个故事</span>
           <span>一场写给朋友的童话</span>
         </header>
         <div class="start-copy">
           <p class="start-kicker">有个朋友住在顶楼</p>
-          <h1>顶楼的<br />童话书</h1>
+          <h1>给我讲个<br />故事</h1>
           <p class="start-summary">ta 不太常说话，只在每层楼留下一些词。今天，你可以把它们慢慢讲成一个故事。</p>
           <div class="start-actions">
             <button class="scene-link" data-action="intro">
