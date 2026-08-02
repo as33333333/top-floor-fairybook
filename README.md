@@ -43,15 +43,24 @@ npm run dev
 1. 把仓库推到 GitHub。
 2. 在 Vercel 新建项目并导入仓库。
 3. Framework 选择 Next.js。
-4. 如需真实 AI 画像，添加环境变量：
+4. 在部署平台的 Environment Variables / Secrets 面板添加环境变量：
 
 ```text
-OPENAI_API_KEY=你的 key
-OPENAI_MODEL=gpt-4.1-mini
-OPENAI_IMAGE_MODEL=gpt-image-1
+DASHSCOPE_API_KEY=你的百炼 API Key
+DASHSCOPE_IMAGE_MODEL=wanx2.1-t2i-turbo
+DASHSCOPE_BASE_URL=https://dashscope.aliyuncs.com/api/v1
 ```
 
-不配置 `OPENAI_API_KEY` 也能完整演示，系统会使用本地 fallback 画像。
+本地开发时将这些变量写入项目根目录的 `.env.local`。该文件已被
+`.gitignore` 排除，不能把真实 Key 写入 `.env.example`、`static/` 或任何前端文件。
+不配置 `DASHSCOPE_API_KEY` 时，插画接口返回 fallback；画像继续使用本地 fallback。
+
+如需使用 OpenAI 生成画像，可另外在服务端配置：
+
+```text
+OPENAI_API_KEY=你的 OpenAI Key
+OPENAI_MODEL=gpt-4.1-mini
+```
 
 静态版会在玩家每层提交故事后立即创建插画任务。若已部署安全的 Next.js API，
 在 `static/config.js` 中填写服务地址即可：
@@ -67,7 +76,8 @@ window.FAIRYBOOK_API_BASE = "https://你的-api-域名";
 - 开始页
 - 剧情引导页
 - 5 层楼流程
-- 每层随机 12 张词卡（主体、意象、情绪、行动各 3 张）
+- 每层展示 20 张词卡（主体、意象、情绪、行动各 5 张）
+- 后续楼层的四类词语都会保留此前选择过的不同词语，并用当前层词库补足 5 个候选
 - 每类词卡选择 1 张
 - 每组词可独立刷新
 - 故事输入与温柔校验

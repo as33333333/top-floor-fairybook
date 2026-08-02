@@ -13,13 +13,6 @@
   const assetBase =
     window.location.protocol === "file:" || isLocalStaticPreview ? "../public/art_assets" : "./art_assets";
   const looseChars = new Set(["的", "地", "得", "了", "着", "过", "在", "一", "个", "只", "很", "被"]);
-  const propByFloor = {
-    1: null,
-    2: "prop_little_lamp.webp",
-    3: "prop_paper_boat.webp",
-    4: "prop_glowing_plant.webp",
-    5: null
-  };
   const preloadedImages = new Set();
 
   const floors = [
@@ -291,22 +284,124 @@
     return [...items].sort(() => Math.random() - 0.5);
   }
 
+  function previousCategoryCards(category, floorNumber) {
+    const categoryIndex = categories.indexOf(category);
+    const previousDrafts = [...state.drafts]
+      .filter((draft) => draft.floor < floorNumber)
+      .sort((a, b) => a.floor - b.floor);
+    const seenWords = new Set();
+
+    return previousDrafts
+      .map((draft) => {
+        const selectedId = draft.selectedIds[categoryIndex];
+        const selectedWord = draft.selectedWords[categoryIndex];
+        return (
+          wordCards.find((item) => item.id === selectedId) ||
+          card(selectedId, selectedWord, category, draft.floor, {})
+        );
+      })
+      .filter((item) => {
+        if (!item?.word || seenWords.has(item.word)) return false;
+        seenWords.add(item.word);
+        return true;
+      })
+      .slice(0, 4);
+  }
+
+  function ensurePreviousWordCandidates() {
+    if (state.currentFloor <= 1 || state.phase === "result") return;
+    let changed = false;
+
+    categories.forEach((category) => {
+      const previousOptions = previousCategoryCards(category, state.currentFloor);
+      const currentOptions = state.drawnCards.filter((item) => item.category === category);
+      if (
+        previousOptions.length === 0 ||
+        (currentOptions.length === 5 &&
+          previousOptions.every((previous) =>
+            currentOptions.some((current) => current.word === previous.word)
+          ))
+      ) {
+        return;
+      }
+
+      const selectedOption = currentOptions.find(
+        (item) => item.id === state.selectedIds[category]
+      );
+      const remainingOptions = currentOptions.filter(
+        (item) =>
+          !previousOptions.some((previous) => previous.word === item.word) &&
+          item.id !== selectedOption?.id
+      );
+      const existingWords = new Set([
+        ...previousOptions.map((item) => item.word),
+        ...(selectedOption ? [selectedOption.word] : []),
+        ...remainingOptions.map((item) => item.word)
+      ]);
+      const additions = shuffle(
+        wordCards.filter(
+          (item) =>
+            item.floor === state.currentFloor &&
+            item.category === category &&
+            !existingWords.has(item.word)
+        )
+      );
+      const nextOptions = [
+        ...previousOptions,
+        ...(selectedOption && !previousOptions.some((item) => item.word === selectedOption.word)
+          ? [selectedOption]
+          : []),
+        ...remainingOptions,
+        ...additions
+      ].slice(0, 5);
+      state.drawnCards = [
+        ...state.drawnCards.filter((item) => item.category !== category),
+        ...nextOptions
+      ];
+      changed = true;
+    });
+
+    if (changed) saveState();
+  }
+
+  function ensureFiveWordOptions() {
+    let changed = false;
+    categories.forEach((category) => {
+      const currentOptions = state.drawnCards.filter((item) => item.category === category);
+      if (currentOptions.length >= 5) return;
+
+      const currentIds = new Set(currentOptions.map((item) => item.id));
+      const additions = shuffle(
+        wordCards.filter(
+          (item) =>
+            item.floor === state.currentFloor &&
+            item.category === category &&
+            !currentIds.has(item.id)
+        )
+      ).slice(0, 5 - currentOptions.length);
+      if (additions.length === 0) return;
+      state.drawnCards.push(...additions);
+      changed = true;
+    });
+    if (changed) saveState();
+  }
+
   function drawCardsForFloor(floorNumber) {
     const usedIds = new Set(state.drafts.flatMap((draft) => draft.selectedIds));
-    const previousWords = state.drafts.flatMap((draft) => draft.selectedWords);
 
     state.drawnCards = categories.flatMap((category) => {
+      const previousOptions = previousCategoryCards(category, floorNumber);
       const candidates = wordCards.filter(
         (item) => item.floor === floorNumber && item.category === category && !usedIds.has(item.id)
       );
-      const picked = shuffle(candidates).slice(0, 3);
+      const picked = shuffle(candidates).slice(0, 5);
 
-      if (floorNumber === 5 && category === "symbol" && previousWords.length > 0) {
-        const memoryCard = card(`memory-${previousWords[0]}`, previousWords[0], "symbol", 5, {
-          memory: 2,
-          being_seen: 1
-        });
-        return shuffle([memoryCard, ...picked]).slice(0, 3);
+      if (previousOptions.length > 0) {
+        const fillCount = 5 - previousOptions.length;
+        const currentOptions = picked
+          .filter((item) => !previousOptions.some((previous) => previous.word === item.word))
+          .slice(0, fillCount);
+        return [...previousOptions, ...currentOptions];
       }
 
       return picked;
@@ -330,14 +425,27 @@
         !usedIds.has(item.id) &&
         !visibleIds.has(item.id)
     );
-    const fallbackPool = wordCards.filter(
-      (item) => item.floor === state.currentFloor && item.category === category && !visibleIds.has(item.id)
+    const previousOptions = previousCategoryCards(category, state.currentFloor);
+    const replacementCount = 5 - previousOptions.length;
+    const preferredPool = pool.filter(
+      (item) => !previousOptions.some((previous) => previous.word === item.word)
     );
-    const replacements = shuffle(pool.length >= 3 ? pool : fallbackPool).slice(0, 3);
-    if (replacements.length < 3) return;
+    const reusablePool = wordCards.filter(
+      (item) =>
+        item.floor === state.currentFloor &&
+        item.category === category &&
+        !preferredPool.some((preferred) => preferred.id === item.id) &&
+        !previousOptions.some((previous) => previous.word === item.word)
+    );
+    const replacements = [...shuffle(preferredPool), ...shuffle(reusablePool)].slice(
+      0,
+      replacementCount
+    );
+    if (replacements.length < replacementCount) return;
 
     state.drawnCards = [
       ...state.drawnCards.filter((item) => item.category !== category),
+      ...previousOptions,
       ...replacements
     ];
     delete state.selectedIds[category];
@@ -352,6 +460,48 @@
       .map((category) => state.drawnCards.find((cardItem) => cardItem.id === state.selectedIds[category]))
       .filter(Boolean)
       .map((cardItem) => cardItem.word);
+  }
+
+  function selectedWordMap() {
+    return Object.fromEntries(
+      categories.map((category) => [
+        category,
+        state.drawnCards.find((item) => item.id === state.selectedIds[category])?.word || ""
+      ])
+    );
+  }
+
+  function generateRandomStorySentence() {
+    const { subject, symbol, emotion, action } = selectedWordMap();
+    const templates = {
+      1: [
+        `${subject}来到${symbol}旁，感到${emotion}，于是决定${action}。`,
+        `故事从${symbol}旁开始：${subject}带着${emotion}的心情，慢慢地${action}。`,
+        `${subject}发现了${symbol}，心里有些${emotion}，却还是试着${action}。`
+      ],
+      2: [
+        `${subject}在${symbol}旁遇见了一个新朋友，感到${emotion}，便试着${action}。`,
+        `走到${symbol}附近时，${subject}感到${emotion}，于是和刚遇见的朋友一起${action}。`,
+        `${symbol}旁传来轻轻的声音，${subject}怀着${emotion}，决定靠过去${action}。`
+      ],
+      3: [
+        `当${symbol}出现在眼前，${subject}感到${emotion}，只好先${action}。`,
+        `${subject}在${symbol}旁遇到了困难，心里十分${emotion}，于是决定${action}。`,
+        `四周忽然安静下来，${subject}望着${symbol}，带着${emotion}的感觉慢慢${action}。`
+      ],
+      4: [
+        `${subject}望着${symbol}，感到${emotion}，还是选择${action}，故事也因此转了弯。`,
+        `${symbol}让${subject}心里升起${emotion}的感觉，ta决定${action}，让事情有一点不同。`,
+        `这一次，${subject}带着${emotion}走到${symbol}旁，轻轻地${action}。`
+      ],
+      5: [
+        `${subject}把${symbol}写进最后一页，感到${emotion}，并决定${action}，把故事留给朋友。`,
+        `故事的最后，${subject}带着${emotion}来到${symbol}旁，选择${action}。`,
+        `${subject}望着${symbol}，终于感到${emotion}，于是${action}，为故事写下了结尾。`
+      ]
+    };
+    const floorTemplates = templates[state.currentFloor] || templates[1];
+    return floorTemplates[Math.floor(Math.random() * floorTemplates.length)];
   }
 
   function currentFloor() {
@@ -484,16 +634,21 @@
       const selectedCard =
         wordCards.find((item) => item.id === selectedId) ||
         card(selectedId, draft.selectedWords[index], category, floorNumber, {});
+      const previousOptions = previousCategoryCards(category, floorNumber);
+      const fixedAlternatives = previousOptions.filter(
+        (previous) => previous.word !== selectedCard.word
+      );
       const alternatives = shuffle(
         wordCards.filter(
           (item) =>
             item.floor === floorNumber &&
             item.category === category &&
-            item.id !== selectedCard.id
+            item.id !== selectedCard.id &&
+            !fixedAlternatives.some((fixed) => fixed.id === item.id)
         )
-      ).slice(0, 2);
+      ).slice(0, 4 - fixedAlternatives.length);
       state.selectedIds[category] = selectedCard.id;
-      return shuffle([selectedCard, ...alternatives]);
+      return [selectedCard, ...fixedAlternatives, ...alternatives];
     });
     state.story = draft.userStory;
     state.phase = "write";
@@ -607,9 +762,6 @@
   function preloadFloorAssets(floorNumber) {
     if (floorNumber < 1 || floorNumber > 5) return;
     preloadImage(`${assetBase}/01_backgrounds/bg_stair_${floorNumber}f.webp`);
-    if (propByFloor[floorNumber]) {
-      preloadImage(`${assetBase}/03_props/${propByFloor[floorNumber]}`);
-    }
   }
 
   async function queueIllustration(draft) {
@@ -793,6 +945,9 @@
         <div class="composer-entry">
           <label class="sr-only" for="story-input">写给朋友</label>
           <input id="story-input" type="text" value="${escapeHtml(state.story)}" placeholder="把这 4 个词讲进故事里。" autocomplete="off" />
+          <button class="composer-random" data-action="random-story" title="根据已选词随机写一句">
+            <span aria-hidden="true">↻</span>随机一句
+          </button>
           <button class="composer-submit" data-action="submit-story" aria-label="讲给朋友听" title="讲给朋友听">
             <span aria-hidden="true">↑</span>
           </button>
@@ -806,11 +961,6 @@
   function renderFeedbackOverlay(floor) {
     return `
       <section class="scene-response" aria-label="朋友反馈">
-        ${
-          propByFloor[floor.floor]
-            ? `<img class="response-prop" src="${assetBase}/03_props/${propByFloor[floor.floor]}" alt="" />`
-            : ""
-        }
         <p>${floor.response.change}</p>
         <blockquote>${floor.response.line}</blockquote>
         <button class="response-link" data-action="next-floor">
@@ -907,6 +1057,8 @@
     ) {
       drawCardsForFloor(state.currentFloor);
     }
+    if (state.screen === "floor") ensurePreviousWordCandidates();
+    if (state.screen === "floor" && state.phase !== "result") ensureFiveWordOptions();
 
     preloadImage(`${assetBase}/01_backgrounds/bg_start_tower.webp`);
     if (state.screen === "floor") {
@@ -947,6 +1099,12 @@
         if (action === "refresh-category") refreshCategory(node.dataset.category);
         if (action === "close-input") {
           state.phase = "select";
+          state.error = "";
+          saveState();
+          render();
+        }
+        if (action === "random-story") {
+          state.story = generateRandomStorySentence();
           state.error = "";
           saveState();
           render();

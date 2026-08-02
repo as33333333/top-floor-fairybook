@@ -4,4 +4,5 @@ out
 .env
 .env.local
 npm-debug.log*
+*.tsbuildinfo
 .DS_Store
